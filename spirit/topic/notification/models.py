@@ -11,20 +11,18 @@ from django.db import IntegrityError, transaction
 from .managers import TopicNotificationQuerySet
 
 
-UNDEFINED, MENTION, COMMENT = range(3)
-
-ACTION_CHOICES = (
-    (UNDEFINED, _("Undefined")),
-    (MENTION, _("Mention")),
-    (COMMENT, _("Comment")),
-)
-
-
 class TopicNotification(models.Model):
+    UNDEFINED, MENTION, COMMENT = range(3)
+
+    ACTION_CHOICES = (
+        (UNDEFINED, _("Undefined")),
+        (MENTION, _("Mention")),
+        (COMMENT, _("Comment")),
+    )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='st_topic_notifications')
-    topic = models.ForeignKey('spirit_topic.Topic')
-    comment = models.ForeignKey('spirit_comment.Comment')
+    topic = models.ForeignKey('spirit_topic.Topic', related_name='topic_notifications')
+    comment = models.ForeignKey('spirit_comment.Comment', related_name='topic_notifications')
 
     date = models.DateTimeField(default=timezone.now)
     action = models.IntegerField(choices=ACTION_CHOICES, default=UNDEFINED)
@@ -76,13 +74,6 @@ class TopicNotification(models.Model):
                 'is_active': True
             }
         )
-
-    @classmethod
-    def notify_new_comment(cls, comment):
-        cls.objects\
-            .filter(topic=comment.topic, is_active=True, is_read=True)\
-            .exclude(user=comment.user)\
-            .update(comment=comment, is_read=False, action=COMMENT, date=timezone.now())
 
     @classmethod
     def notify_new_mentions(cls, comment, mentions):

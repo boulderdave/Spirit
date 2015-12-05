@@ -2,15 +2,16 @@
 
 from __future__ import unicode_literals
 
-from ..topic.notification.models import TopicNotification, UNDEFINED
+from ..topic.notification.models import TopicNotification
+from ..topic.notification.utils import notify_new_comment
 from ..topic.unread.models import TopicUnread
 from .history.models import CommentHistory
 from .poll.utils.render_static import post_render_static_polls
 
 
 def comment_posted(comment, mentions):
-    TopicNotification.create_maybe(user=comment.user, comment=comment, action=UNDEFINED)
-    TopicNotification.notify_new_comment(comment=comment)
+    TopicNotification.create_maybe(user=comment.user, comment=comment, action=TopicNotification.UNDEFINED)
+    notify_new_comment(comment=comment)
     TopicNotification.notify_new_mentions(comment=comment, mentions=mentions)
     TopicUnread.unread_new_comment(comment=comment)
     comment.topic.increase_comment_count()
