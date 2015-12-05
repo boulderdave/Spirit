@@ -25,7 +25,7 @@ class TopicNotification(models.Model):
     comment = models.ForeignKey('spirit_comment.Comment', related_name='topic_notifications')
 
     date = models.DateTimeField(default=timezone.now)
-    action = models.IntegerField(choices=ACTION_CHOICES, default=UNDEFINED)
+    action = models.IntegerField(choices=ACTION_CHOICES, default=TopicNotification.UNDEFINED)
     is_read = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
 
@@ -46,11 +46,11 @@ class TopicNotification(models.Model):
 
     @property
     def is_mention(self):
-        return self.action == MENTION
+        return self.action == self.MENTION
 
     @property
     def is_comment(self):
-        return self.action == COMMENT
+        return self.action == self.COMMENT
 
     @classmethod
     def mark_as_read(cls, user, topic):
@@ -62,7 +62,7 @@ class TopicNotification(models.Model):
             .update(is_read=True)
 
     @classmethod
-    def create_maybe(cls, user, comment, is_read=True, action=COMMENT):
+    def create_maybe(cls, user, comment, is_read=True, action=TopicNotification.COMMENT):
         # Create a dummy notification
         return cls.objects.get_or_create(
             user=user,
@@ -88,7 +88,7 @@ class TopicNotification(models.Model):
                         user=user,
                         topic=comment.topic,
                         comment=comment,
-                        action=MENTION,
+                        action=cls.MENTION,
                         is_active=True
                     )
             except IntegrityError:
@@ -96,7 +96,7 @@ class TopicNotification(models.Model):
 
         cls.objects\
             .filter(user__in=mentions.values(), topic=comment.topic, is_read=True)\
-            .update(comment=comment, is_read=False, action=MENTION, date=timezone.now())
+            .update(comment=comment, is_read=False, action=cls.MENTION, date=timezone.now())
 
     @classmethod
     def bulk_create(cls, users, comment):
@@ -104,7 +104,7 @@ class TopicNotification(models.Model):
             cls(user=user,
                 topic=comment.topic,
                 comment=comment,
-                action=COMMENT,
+                action=cls.COMMENT,
                 is_active=True)
             for user in users
         ])
