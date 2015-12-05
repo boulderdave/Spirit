@@ -25,7 +25,7 @@ class TopicNotification(models.Model):
     comment = models.ForeignKey('spirit_comment.Comment', related_name='topic_notifications')
 
     date = models.DateTimeField(default=timezone.now)
-    action = models.IntegerField(choices=ACTION_CHOICES, default=TopicNotification.UNDEFINED)
+    action = models.IntegerField(choices=ACTION_CHOICES, default=UNDEFINED)
     is_read = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
 
@@ -42,7 +42,7 @@ class TopicNotification(models.Model):
 
     @property
     def text_action(self):
-        return ACTION_CHOICES[self.action][1]
+        return self.ACTION_CHOICES[self.action][1]
 
     @property
     def is_mention(self):
@@ -62,7 +62,9 @@ class TopicNotification(models.Model):
             .update(is_read=True)
 
     @classmethod
-    def create_maybe(cls, user, comment, is_read=True, action=TopicNotification.COMMENT):
+    def create_maybe(cls, user, comment, is_read=True, action=None):
+        if not action:
+            action = cls.COMMENT
         # Create a dummy notification
         return cls.objects.get_or_create(
             user=user,
